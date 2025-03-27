@@ -1,2 +1,2 @@
 # Public
-Finalised scripts which are labelled
+This directory contains finalised scripts which are labelled/commented.
