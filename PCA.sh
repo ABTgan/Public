@@ -1,8 +1,8 @@
 #!/bin/bash
 #$ -cwd           # Set the working directory for the job to the current directory
 #$ -pe smp 1      # Request 1GB per core   
-#$ -l h_rt=1:0:0# Request 24 hours runtime
-#$ -l h_vmem=1G # Request 1GB per core
+#$ -l h_rt=1:0:0  # Request 24 hours runtime
+#$ -l h_vmem=4G    # Request 1GB per core
 
 echo "Script started at: $(date)"
 
@@ -61,7 +61,83 @@ plink2 --bfile $RESULTS_DIR/chr21_maf_0.1 \
   --pca \
   --out $RESULTS_DIR/chr21_pca_0.1
 
+echo "Script ended at: $(date)"
 
 
+
+
+
+
+
+
+
+##----COPY VERSION BELOW WITHOUT COMMENTS-----###
+
+
+#!/bin/bash
+#$ -cwd           # Set the working directory for the job to the current directory
+#$ -pe smp 1      # Request 1GB per core
+#$ -l h_rt=1:0:0  # Request 24 hours runtime
+#$ -l h_vmem=4G   # Request 4GB of memory
+
+echo "Script started at: $(date)"
+
+# Loading necessary modules
+module load plink/2.00a6LM
+
+# Specifying input and output pathway directories
+VCF_FILE=/data/SBBS-FumagalliLab/SWAsia/Retrotransposons/HGDP/hgdp_wgs.20190516.full.chr21.vcf.gz
+RESULTS_DIR=/data/home/bty647/output
+
+# Step 1: Linkage Pruning
+plink2 --vcf $VCF_FILE --set-all-var-ids @:# \
+  --indep-pairwise 50 5 0.1 \
+  --max-alleles 2 \
+  --make-bed \
+  --out $RESULTS_DIR/chr21_pruned
+
+# Step 3: PCA Analysis (on LD-pruned dataset)
+plink2 --bfile $RESULTS_DIR/chr21_pruned \
+  --extract $RESULTS_DIR/chr21_pruned.prune.in \
+  --make-bed \
+  --pca \
+  --out $RESULTS_DIR/chr21_pca_pruned
+
+## MAF Filtering ##
+
+# Step 2: MAF Filtering (on LD-pruned dataset) for three thresholds
+# MAF 0.05
+plink2 --bfile $RESULTS_DIR/chr21_pruned \
+  --maf 0.05 \
+  --make-bed \
+  --out $RESULTS_DIR/chr21_maf_0.05
+
+# MAF 0.01
+plink2 --bfile $RESULTS_DIR/chr21_pruned \
+  --maf 0.01 \
+  --make-bed \
+  --out $RESULTS_DIR/chr21_maf_0.01
+
+# MAF 0.1
+plink2 --bfile $RESULTS_DIR/chr21_pruned \
+  --maf 0.1 \
+  --make-bed \
+  --out $RESULTS_DIR/chr21_maf_0.1
+
+# Step 3: PCA Analysis (on MAF-filtered dataset)
+# PCA for MAF 0.05
+plink2 --bfile $RESULTS_DIR/chr21_maf_0.05 \
+  --pca \
+  --out $RESULTS_DIR/chr21_pca_0.05
+
+# PCA for MAF 0.01
+plink2 --bfile $RESULTS_DIR/chr21_maf_0.01 \
+  --pca \
+  --out $RESULTS_DIR/chr21_pca_0.01
+
+# PCA for MAF 0.1
+plink2 --bfile $RESULTS_DIR/chr21_maf_0.1 \
+  --pca \
+  --out $RESULTS_DIR/chr21_pca_0.1
 
 echo "Script ended at: $(date)"
