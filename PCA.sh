@@ -17,11 +17,23 @@ plink2 --vcf $VCF_FILE --set-all-var-ids @:# \ # Assign unique variant IDs based
   --make-bed \ # Convert the dataset into PLINK binary format
   --out $RESULTS_DIR/chr21_pruned
 
-# Step 2: PCA Analysis
+# Step 2: MAF Filtering (on LD-pruned dataset)
+plink2 --bfile $RESULTS_DIR/chr21_ld_pruned \ 
+  --maf 0.05 \ # Filter out SNPs with a minor allele frequency < 5%
+  --make-bed \ 
+  --out $RESULTS_DIR/chr21_maf_filtered
+
+# Step 3: PCA Analysis (on LD-pruned dataset)
 plink2 --bfile $RESULTS_DIR/chr21_pruned \
   --extract $RESULTS_DIR/chr21_pruned.prune.in \ # Select only the uncorrelated SNPs (pruned variants) for PCA
   --make-bed \
-  --pca \
+  --pca \ # Perform PCA
   --out $RESULTS_DIR/chr21_pca_results
+
+# Step 3: PCA Analysis (on MAF-filtered dataset)
+plink2 --bfile $RESULTS_DIR/chr21_maf_filtered \
+  --pca \ # Perform PCA
+  --out $RESULTS_DIR/chr21_pca_results
+
 
 echo "Script ended at: $(date)"
